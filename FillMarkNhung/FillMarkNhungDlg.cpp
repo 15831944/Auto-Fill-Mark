@@ -11,6 +11,8 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#include "Algorithm.h"
+#include <string>
 
 
 // CAboutDlg dialog used for App About
@@ -31,6 +33,7 @@ public:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -52,6 +55,9 @@ END_MESSAGE_MAP()
 
 CFillMarkNhungDlg::CFillMarkNhungDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FILLMARKNHUNG_DIALOG, pParent)
+	, numScore(0)
+	, className(_T(""))
+	, fileSavePath(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -59,14 +65,18 @@ CFillMarkNhungDlg::CFillMarkNhungDlg(CWnd* pParent /*=nullptr*/)
 void CFillMarkNhungDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT_NUM_SCORE, numScore);
+	DDV_MinMaxInt(pDX, numScore, 0, 10);
+	DDX_Text(pDX, IDC_EDIT_NUM_CLASS, className);
+	DDX_Text(pDX, IDC_MFCEDITBROWSE, fileSavePath);
 }
 
 BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BUTTON1, &CFillMarkNhungDlg::OnBnClickedButton1)
-	ON_BN_CLICKED(IDOK, &CFillMarkNhungDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_BUTTON_GEN_SAMPLE, &CFillMarkNhungDlg::OnBnClickedButtonGenSample)
+	ON_BN_CLICKED(ID_BUTTON_NHAPDIEM, &CFillMarkNhungDlg::OnBnClickedButtonNhapdiem)
 END_MESSAGE_MAP()
 
 
@@ -156,26 +166,17 @@ HCURSOR CFillMarkNhungDlg::OnQueryDragIcon()
 }
 
 
-
-void CFillMarkNhungDlg::OnEnChangeMfceditbrowse1()
+void CFillMarkNhungDlg::OnBnClickedButtonGenSample()
 {
-	// TODO:  If this is a RICHEDIT control, the control will not
-	// send this notification unless you override the CDialogEx::OnInitDialog()
-	// function and call CRichEditCtrl().SetEventMask()
-	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
+	// TODO: Add your control notification handler code here
+	UpdateData(TRUE);
+	std::wstring temp(className);
+	temp += L".xlsx";
+	createStudentListSample(temp.c_str(), numScore);
 }
 
 
-void CFillMarkNhungDlg::OnBnClickedButton1()
+void CFillMarkNhungDlg::OnBnClickedButtonNhapdiem()
 {
 	// TODO: Add your control notification handler code here
-}
-
-
-void CFillMarkNhungDlg::OnBnClickedOk()
-{
-	// TODO: Add your control notification handler code here
-	CDialogEx::OnOK();
 }

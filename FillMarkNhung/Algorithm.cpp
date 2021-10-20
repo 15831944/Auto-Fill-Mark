@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include "libxl.h"
+#include <string>
 
 int main1()
 {
@@ -32,7 +33,7 @@ int main1()
 	return 0;
 }
 
-int createStudentListSample(const TCHAR* filepath)
+int createStudentListSample(const TCHAR* filepath, int numScore)
 {
 	libxl::Book* pbook = xlCreateXMLBook();
 	pbook->setKey(L"Halil Kural", L"windows-2723210a07c4e90162b26966a8jcdboe");//set cdkey
@@ -49,9 +50,24 @@ int createStudentListSample(const TCHAR* filepath)
 	libxl::Sheet * sheetread = pbook->addSheet(L"DS_HOCSINH");
 	sheetread->writeStr(0, 0, L"STT", textFormat);
 	sheetread->writeStr(0, 1, L"Họ và tên", textFormat);
+
+	for (int i = 0; i < numScore; i++)
+	{
+		std::wstring temp(L"DIEM_");
+		temp += std::to_wstring(i + 1);
+		const TCHAR* sheetName = temp.c_str();
+		libxl::Sheet* sheet1 = pbook->addSheet(sheetName);
+		sheet1->writeStr(0, 0, L"Họ và tên", textFormat);
+		sheet1->writeStr(0, 1, L"Điểm", textFormat);
+	}
 	//sheetread->writeStr(1, 3, L"Họ và tên", textFormat);
 
-	pbook->save(L"Bang_diem_NhungNhung.xlsx");
+	if (pbook->save(filepath)) {
+		::ShellExecute(NULL, L"open", filepath, NULL, NULL, SW_SHOW);
+	}
+	else {
+		std::cout << pbook->errorMessage() << std::endl;
+	}
 
 	pbook->release();
 

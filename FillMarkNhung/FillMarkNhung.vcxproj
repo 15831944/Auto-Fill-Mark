@@ -80,8 +80,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\VSrepo\Fill Mark\libxs_lib_release_x64\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\VSrepo\Fill Mark\libxs_lib_release_x64\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\VSrepo\Auto-Fill-Mark\libxs_lib_release_x64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\VSrepo\Auto-Fill-Mark\libxs_lib_release_x64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -121,7 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\VSrepo\Fill Mark\libxs_lib_release_x64\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\VSrepo\Auto-Fill-Mark\libxs_lib_release_x64\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -196,6 +196,7 @@
     <ClInclude Include="FillMarkNhung.h" />
     <ClInclude Include="FillMarkNhungDlg.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="LevenshteinDistance.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -204,6 +205,7 @@
     <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="FillMarkNhung.cpp" />
     <ClCompile Include="FillMarkNhungDlg.cpp" />
+    <ClCompile Include="LevenshteinDistance.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

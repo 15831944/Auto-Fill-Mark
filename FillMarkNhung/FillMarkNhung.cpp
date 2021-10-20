@@ -79,7 +79,7 @@ BOOL CFillMarkNhungApp::InitInstance()
 	{
 		// TODO: Place code here to handle when the dialog is
 		//  dismissed with OK
-		createStudentListSample(NULL);
+		
 	}
 	else if (nResponse == IDCANCEL)
 	{

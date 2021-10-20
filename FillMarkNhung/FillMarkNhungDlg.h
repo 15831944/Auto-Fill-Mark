@@ -32,7 +32,9 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnEnChangeMfceditbrowse1();
-	afx_msg void OnBnClickedButton1();
-	afx_msg void OnBnClickedOk();
+	int numScore;
+	afx_msg void OnBnClickedButtonGenSample();
+	CString className;
+	CString fileSavePath;
+	afx_msg void OnBnClickedButtonNhapdiem();
 };
