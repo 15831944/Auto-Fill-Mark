@@ -179,4 +179,8 @@ void CFillMarkNhungDlg::OnBnClickedButtonGenSample()
 void CFillMarkNhungDlg::OnBnClickedButtonNhapdiem()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(TRUE);
+	CString filePath = L"2021-10-21_22-36-24_6A3.xlsx";
+	std::wstring temp(filePath);
+	importScore(temp.c_str(), numScore);
 }

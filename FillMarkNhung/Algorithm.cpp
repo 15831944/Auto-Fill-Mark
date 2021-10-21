@@ -102,52 +102,57 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 int importScore(const TCHAR* filepath, int numScore)
 {
 	std::vector<Student> studentList;
-	libxl::Book* book = xlCreateBook();
+	std::vector<std::vector<Score>> scoreList;
+	libxl::Book* book = xlCreateXMLBook();
 	if (book->load(filepath))
 	{
+		//Sheet DS_HOCSINH
 		Sheet* sheet = book->getSheet(0);
 		if (sheet)
 		{
-			for (int row = sheet->firstRow(); row < sheet->lastRow(); ++row)
+			for (int row = 1; row < sheet->lastRow(); ++row)
 			{
-				for (int col = sheet->firstCol(); col < sheet->lastCol(); ++col)
-				{
-					CellType cellType = sheet->cellType(row, col);
-					if (!(sheet->isFormula(row, col)))
-					{
-						switch (cellType)
-						{
-						case CELLTYPE_EMPTY:
-						{
-							break;
-						}
-						case CELLTYPE_NUMBER:
-						{
-							break;
-						}
-						case CELLTYPE_STRING:
-						{
-							const wchar_t* s = sheet->readStr(row, col);
-							break;
-						}
-						case CELLTYPE_BOOLEAN:
-						{
-							break;
-						}
-						case CELLTYPE_BLANK:
-						{
-							break;
-						}
-						case CELLTYPE_ERROR:
-						{
-							break;
-						}
 
-						}
-					}
+				CellType cellType1 = sheet->cellType(row, 1);
+				CellType cellType2 = sheet->cellType(row, 2);
+				if (cellType1 == CELLTYPE_STRING && cellType2 == CELLTYPE_STRING && sheet->cellType(row, 0) == CELLTYPE_NUMBER)
+				{
+					const wchar_t* s1 = sheet->readStr(row, 1);
+					std::wstring ws1(s1);
+					const wchar_t* s2 = sheet->readStr(row, 2);
+					std::wstring ws2(s2);
+					int id = sheet->readNum(row, 0);
+					ws1 = ws1 + L" " + ws2;
+					Student student;
+					student.id = id;
+					student.name = ws1;
+					studentList.push_back(student);
 				}
 			}
 		}
+
+		//Import score tabs
+		for (int i = 1; i < book->sheetCount(); ++i)
+		{
+			std::vector<Score> scoreListTmp;
+			Sheet* sheet = book->getSheet(i);
+			if (sheet)
+			{
+				for (int row = 1; row < sheet->lastRow(); ++row)
+				{
+					if (sheet->cellType(row, 1) == CELLTYPE_NUMBER && sheet->cellType(row, 0) == CELLTYPE_STRING)
+					{
+						const wchar_t* s1 = sheet->readStr(row, 0);
+						std::wstring nickname(s1);
+						float scoreTemp = sheet->readNum(row, 1);
+						Score score = { nickname, scoreTemp };
+						scoreListTmp.push_back(score);
+					}
+				}
+			}
+			scoreList.push_back(scoreListTmp);
+		}
+
 	}
 	return 0;
 }
