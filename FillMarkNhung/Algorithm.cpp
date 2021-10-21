@@ -1,5 +1,7 @@
-﻿#include "Algorithm.h"
-#include "pch.h"
+﻿#include "pch.h"
+#include "Algorithm.h"
+#include <regex>
+
 
 #define libxl_sample
 #ifdef libxl_sample
@@ -33,6 +35,21 @@ int main1()
 	return 0;
 }
 
+std::wstring getTime()
+{
+	time_t rawtime;
+	struct tm timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	localtime_s(&timeinfo, &rawtime);
+
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S_", &timeinfo);
+	std::string str(buffer);
+	std::wstring wsTmp(str.begin(), str.end());
+	return wsTmp;
+}
+
 int createStudentListSample(const TCHAR* filepath, int numScore)
 {
 	libxl::Book* pbook = xlCreateXMLBook();
@@ -62,8 +79,11 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	}
 	//sheetread->writeStr(1, 3, L"Họ và tên", textFormat);
 
-	if (pbook->save(filepath)) {
-		::ShellExecute(NULL, L"open", filepath, NULL, NULL, SW_SHOW);
+	std::wstring str = getTime();
+	std::wstring temp(filepath);
+	temp = str + temp;
+	if (pbook->save(temp.c_str())) {
+		::ShellExecute(NULL, L"open", temp.c_str(), NULL, NULL, SW_SHOW);
 	}
 	else {
 		std::cout << pbook->errorMessage() << std::endl;
