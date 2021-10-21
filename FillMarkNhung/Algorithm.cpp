@@ -10,6 +10,8 @@
 #include "libxl.h"
 #include <string>
 
+using namespace libxl;
+
 int main1()
 {
 	libxl::Book* pbook = xlCreateBook();
@@ -66,7 +68,8 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 
 	libxl::Sheet * sheetread = pbook->addSheet(L"DS_HOCSINH");
 	sheetread->writeStr(0, 0, L"STT", textFormat);
-	sheetread->writeStr(0, 1, L"Họ và tên", textFormat);
+	sheetread->writeStr(0, 1, L"Họ", textFormat);
+	sheetread->writeStr(0, 2, L"Tên", textFormat);
 
 	for (int i = 0; i < numScore; i++)
 	{
@@ -76,6 +79,7 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 		libxl::Sheet* sheet1 = pbook->addSheet(sheetName);
 		sheet1->writeStr(0, 0, L"Họ và tên", textFormat);
 		sheet1->writeStr(0, 1, L"Điểm", textFormat);
+		sheetread->writeStr(0, i+3, sheetName, textFormat);
 	}
 	//sheetread->writeStr(1, 3, L"Họ và tên", textFormat);
 
@@ -91,6 +95,60 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 
 	pbook->release();
 
+	return 0;
+}
+
+
+int importScore(const TCHAR* filepath, int numScore)
+{
+	std::vector<Student> studentList;
+	libxl::Book* book = xlCreateBook();
+	if (book->load(filepath))
+	{
+		Sheet* sheet = book->getSheet(0);
+		if (sheet)
+		{
+			for (int row = sheet->firstRow(); row < sheet->lastRow(); ++row)
+			{
+				for (int col = sheet->firstCol(); col < sheet->lastCol(); ++col)
+				{
+					CellType cellType = sheet->cellType(row, col);
+					if (!(sheet->isFormula(row, col)))
+					{
+						switch (cellType)
+						{
+						case CELLTYPE_EMPTY:
+						{
+							break;
+						}
+						case CELLTYPE_NUMBER:
+						{
+							break;
+						}
+						case CELLTYPE_STRING:
+						{
+							const wchar_t* s = sheet->readStr(row, col);
+							break;
+						}
+						case CELLTYPE_BOOLEAN:
+						{
+							break;
+						}
+						case CELLTYPE_BLANK:
+						{
+							break;
+						}
+						case CELLTYPE_ERROR:
+						{
+							break;
+						}
+
+						}
+					}
+				}
+			}
+		}
+	}
 	return 0;
 }
 
