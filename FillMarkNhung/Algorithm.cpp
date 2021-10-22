@@ -63,6 +63,7 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 		temp += std::to_wstring(i + 1);
 		const TCHAR* sheetName = temp.c_str();
 		libxl::Sheet* sheet1 = pbook->addSheet(sheetName);
+		//sheet1->writeStr(0, 0, L"STT", textFormat);
 		sheet1->writeStr(0, 0, L"Họ và tên", textFormat);
 		sheet1->writeStr(0, 1, L"Điểm", textFormat);
 		sheetread->writeStr(0, i+3, sheetName, textFormat);
@@ -82,12 +83,35 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	return 0;
 }
 
-int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, std::vector<int>& scoreListError)
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book)
 {
 	double threshold = 0.85;
+
+	libxl::Font* textFont = book->addFont();
+	textFont->setSize(11);
+	textFont->setName(L"Calibri");
+	textFont->setBold(true);
+
+	libxl::Format* textFormat = book->addFormat();
+	textFormat->setFont(textFont);
+
+	Format* formatError1 = book->addFormat();
+	formatError1->setFillPattern(FILLPATTERN_SOLID);
+	formatError1->setPatternForegroundColor(COLOR_RED);
+	formatError1->setFont(textFont);
+
+	Format* formatError2 = book->addFormat();
+	formatError2->setFillPattern(FILLPATTERN_SOLID);
+	formatError2->setPatternForegroundColor(COLOR_BLUE);
+	formatError2->setFont(textFont);
+
+
 	for (int i = 0; i < scoreList.size(); i++)
 	{
 		std::vector<Score> scoreListTmp = scoreList[i];
+		std::vector<int> scoreListErrorTmp;
+		Sheet* sheet = book->getSheet(i+1);
+
 		for (int j = 0; j < scoreListTmp.size(); j++)
 		{
 			std::wstring nickname = scoreListTmp[j].nickname;
@@ -106,22 +130,37 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 			}
 			if (maxRatio > threshold)
 			{
-				if (studentList[maxK].scoreList[i] < 0)
+				if (studentList[maxK].scoreList[i] == -1)
 				{
 					studentList[maxK].scoreList[i] = scoreTemporary;
 				}
+				else if (studentList[maxK].scoreList[i] == -2)
+				{
+
+				}
 				else
 				{
-					scoreListError.push_back(j);
+					studentList[maxK].scoreList[i] = -2;
+					scoreListErrorTmp.push_back(scoreListTmp[j].id);
+					sheet->writeStr(scoreListTmp[j].id, 2, L"DUPLICATE", formatError1);
 				}
 			}
-
+			else
+			{
+				scoreListErrorTmp.push_back(scoreListTmp[j].id);
+				sheet->writeStr(scoreListTmp[j].id, 2, L"NOT FOUND", formatError2);
+			}
+#ifdef _DEBUG
+			sheet->writeStr(scoreListTmp[j].id, 4, studentList[maxK].name.c_str(), textFormat);
+			sheet->writeNum(scoreListTmp[j].id, 5, maxRatio, textFormat);
+#endif
 		}
+		//scoreListError.push_back(scoreListErrorTmp);
 	}
 	return 0;
 }
 
-int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListError, Sheet* sheet, int numScore, libxl::Format* textFormat)
+int exportScore(std::vector<Student>& studentList, std::vector<std::vector<int>>& scoreListError, Sheet* sheet, int numScore, libxl::Format* textFormat, libxl::Format* formatError)
 {
 	if (sheet)
 	{
@@ -134,6 +173,10 @@ int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListEr
 				{
 					sheet->writeNum(i+1, j+3, val, textFormat);
 				}
+				else if (val == -2)
+				{
+					sheet->writeBlank(i + 1, j + 3, formatError);
+				}
 			}
 		}
 	}
@@ -144,7 +187,8 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 {
 	std::vector<Student> studentList;
 	std::vector<std::vector<Score>> scoreList;
-	std::vector<int> scoreListError;
+	std::vector<int> studentListError;
+	std::vector<std::vector<int>> scoreListError;
 	libxl::Book* book = xlCreateXMLBook();
 	book->setKey(L"Halil Kural", L"windows-2723210a07c4e90162b26966a8jcdboe");//set cdkey
 	if (book->load(filepath))
@@ -155,10 +199,7 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 		{
 			for (int row = 1; row < sheet->lastRow(); ++row)
 			{
-
-				CellType cellType1 = sheet->cellType(row, 1);
-				CellType cellType2 = sheet->cellType(row, 2);
-				if (cellType1 == CELLTYPE_STRING && cellType2 == CELLTYPE_STRING && sheet->cellType(row, 0) == CELLTYPE_NUMBER)
+				if (sheet->cellType(row, 1) == CELLTYPE_STRING && sheet->cellType(row, 2) == CELLTYPE_STRING && sheet->cellType(row, 0) == CELLTYPE_NUMBER)
 				{
 					const wchar_t* s1 = sheet->readStr(row, 1);
 					std::wstring ws1(s1);
@@ -167,7 +208,7 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 					int id = sheet->readNum(row, 0);
 					ws1 = ws1 + L" " + ws2;
 					Student student;
-					student.id = id;
+					student.id = row;
 					student.name = ws1;
 					for (int i = 1; i < book->sheetCount(); ++i)
 					{
@@ -194,10 +235,11 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 				{
 					if (sheet->cellType(row, 1) == CELLTYPE_NUMBER && sheet->cellType(row, 0) == CELLTYPE_STRING)
 					{
+						//int id = sheet->readNum(row, 0);
 						const wchar_t* s1 = sheet->readStr(row, 0);
 						std::wstring nickname(s1);
 						float scoreTemp = sheet->readNum(row, 1);
-						Score score = { nickname, scoreTemp };
+						Score score = {row, nickname, scoreTemp};
 						scoreListTmp.push_back(score);
 					}
 				}
@@ -217,8 +259,6 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 		return 1;
 	}
 
-	matchScore(studentList, scoreList, scoreListError);
-
 	libxl::Font* textFont = book->addFont();
 	textFont->setSize(13);
 	textFont->setName(L"Times New Roman");
@@ -227,7 +267,12 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 	textFormat->setFont(textFont);
 	textFormat->setAlignH(libxl::ALIGNH_RIGHT);
 
-	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1, textFormat);
+	Format* formatError1 = book->addFormat();
+	formatError1->setFillPattern(FILLPATTERN_SOLID);
+	formatError1->setPatternForegroundColor(COLOR_RED);
+
+	matchScore(studentList, scoreList, book);
+	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1, textFormat, formatError1);
 
 	if (book->save(fileOutPut)) {
 		//::ShellExecute(NULL, L"open", fileOutPut, NULL, NULL, SW_SHOW);
