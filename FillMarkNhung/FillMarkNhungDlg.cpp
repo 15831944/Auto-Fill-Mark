@@ -69,6 +69,7 @@ void CFillMarkNhungDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxInt(pDX, numScore, 0, 10);
 	DDX_Text(pDX, IDC_EDIT_NUM_CLASS, className);
 	DDX_Text(pDX, IDC_MFCEDITBROWSE, fileSavePath);
+	DDX_Control(pDX, IDC_MFCEDITBROWSE, editBrowserCtrl);
 }
 
 BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
@@ -170,9 +171,11 @@ void CFillMarkNhungDlg::OnBnClickedButtonGenSample()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(TRUE);
+	std::wstring timeTemp = getTimeToWString();
 	std::wstring temp(className);
-	temp += L".xlsx";
+	temp = timeTemp + temp + L".xlsx";
 	createStudentListSample(temp.c_str(), numScore);
+	editBrowserCtrl.SetWindowTextW(temp.c_str());
 }
 
 
@@ -183,4 +186,19 @@ void CFillMarkNhungDlg::OnBnClickedButtonNhapdiem()
 	CString filePath = L"2021-10-21_22-36-24_6A3.xlsx";
 	std::wstring temp(filePath);
 	importScore(temp.c_str(), numScore);
+}
+
+std::wstring CFillMarkNhungDlg::getTimeToWString()
+{
+	time_t rawtime;
+	struct tm timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	localtime_s(&timeinfo, &rawtime);
+
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S_", &timeinfo);
+	std::string str(buffer);
+	std::wstring wsTmp(str.begin(), str.end());
+	return wsTmp;
 }

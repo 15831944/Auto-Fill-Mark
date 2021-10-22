@@ -9,6 +9,7 @@
 #include <iostream>
 #include "libxl.h"
 #include <string>
+#include "LevenshteinDistance.h"
 
 using namespace libxl;
 
@@ -35,21 +36,6 @@ int main1()
 	/*}*/
 
 	return 0;
-}
-
-std::wstring getTime()
-{
-	time_t rawtime;
-	struct tm timeinfo;
-	char buffer[80];
-
-	time(&rawtime);
-	localtime_s(&timeinfo, &rawtime);
-
-	strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S_", &timeinfo);
-	std::string str(buffer);
-	std::wstring wsTmp(str.begin(), str.end());
-	return wsTmp;
 }
 
 int createStudentListSample(const TCHAR* filepath, int numScore)
@@ -83,9 +69,7 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	}
 	//sheetread->writeStr(1, 3, L"Họ và tên", textFormat);
 
-	std::wstring str = getTime();
 	std::wstring temp(filepath);
-	temp = str + temp;
 	if (pbook->save(temp.c_str())) {
 		::ShellExecute(NULL, L"open", temp.c_str(), NULL, NULL, SW_SHOW);
 	}
@@ -98,12 +82,71 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	return 0;
 }
 
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, std::vector<int>& scoreListError)
+{
+	double threshold = 0.85;
+	for (int i = 0; i < scoreList.size(); i++)
+	{
+		std::vector<Score> scoreListTmp = scoreList[i];
+		for (int j = 0; j < scoreListTmp.size(); j++)
+		{
+			std::wstring nickname = scoreListTmp[j].nickname;
+			float scoreTemporary = scoreListTmp[j].scoreTemporary;
+			double maxRatio = 0;
+			int maxK = -1;
+			for (int k = 0; k < studentList.size(); k++)
+			{
+				double ratio = levenshteinRatio(nickname, studentList[k].name);
+				if (ratio > maxRatio)
+				{
+					maxRatio = ratio;
+					maxK = k;
+					scoreListTmp[j].matchID = studentList[k].id;
+				}
+			}
+			if (maxRatio > threshold)
+			{
+				if (studentList[maxK].scoreList[i] < 0)
+				{
+					studentList[maxK].scoreList[i] = scoreTemporary;
+				}
+				else
+				{
+					scoreListError.push_back(j);
+				}
+			}
+
+		}
+	}
+	return 0;
+}
+
+int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListError, Sheet* sheet, int numScore)
+{
+	if (sheet)
+	{
+		for (int i = 0; i < studentList.size(); i++)
+		{
+			for (int j = 0; j < numScore; j++)
+			{
+				float val = studentList[i].scoreList[j];
+				if (val >=0)
+				{
+					sheet->writeNum(i+1, j+3, val);
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 int importScore(const TCHAR* filepath, int numScore)
 {
 	std::vector<Student> studentList;
 	std::vector<std::vector<Score>> scoreList;
+	std::vector<int> scoreListError;
 	libxl::Book* book = xlCreateXMLBook();
+	book->setKey(L"Halil Kural", L"windows-2723210a07c4e90162b26966a8jcdboe");//set cdkey
 	if (book->load(filepath))
 	{
 		//Sheet DS_HOCSINH
@@ -126,6 +169,10 @@ int importScore(const TCHAR* filepath, int numScore)
 					Student student;
 					student.id = id;
 					student.name = ws1;
+					for (int i = 1; i < book->sheetCount(); ++i)
+					{
+						student.scoreList.push_back(-1);
+					}
 					studentList.push_back(student);
 				}
 			}
@@ -154,6 +201,18 @@ int importScore(const TCHAR* filepath, int numScore)
 		}
 
 	}
+
+	matchScore(studentList, scoreList, scoreListError);
+	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1);
+
+	if (book->save(filepath)) {
+		::ShellExecute(NULL, L"open", filepath, NULL, NULL, SW_SHOW);
+	}
+	else {
+		std::cout << book->errorMessage() << std::endl;
+	}
+
+	book->release();
 	return 0;
 }
 

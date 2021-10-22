@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include <string>
 
 // CFillMarkNhungDlg dialog
 class CFillMarkNhungDlg : public CDialogEx
@@ -37,4 +37,8 @@ public:
 	CString className;
 	CString fileSavePath;
 	afx_msg void OnBnClickedButtonNhapdiem();
+	CMFCEditBrowseCtrl editBrowserCtrl;
+	std::wstring getTimeToWString();
 };
+
+
