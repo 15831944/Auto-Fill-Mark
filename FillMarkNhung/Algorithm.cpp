@@ -98,11 +98,16 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	return 0;
 }
 
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, std::vector<int>& scoreListError)
+{
+
+}
 
 int importScore(const TCHAR* filepath, int numScore)
 {
 	std::vector<Student> studentList;
 	std::vector<std::vector<Score>> scoreList;
+	std::vector<int> scoreListError;
 	libxl::Book* book = xlCreateXMLBook();
 	if (book->load(filepath))
 	{
@@ -126,6 +131,10 @@ int importScore(const TCHAR* filepath, int numScore)
 					Student student;
 					student.id = id;
 					student.name = ws1;
+					for (int i = 1; i < book->sheetCount(); ++i)
+					{
+						student.scoreList.push_back(-1);
+					}
 					studentList.push_back(student);
 				}
 			}
@@ -154,6 +163,7 @@ int importScore(const TCHAR* filepath, int numScore)
 		}
 
 	}
+	book->release();
 	return 0;
 }
 

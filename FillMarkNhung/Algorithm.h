@@ -17,3 +17,5 @@ struct Score
 int createStudentListSample(const TCHAR* filepath, int numScore);
 
 int importScore(const TCHAR* filepath, int numScore);
+
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, std::vector<int>& scoreListError);
