@@ -39,6 +39,8 @@ public:
 	afx_msg void OnBnClickedButtonNhapdiem();
 	CMFCEditBrowseCtrl editBrowserCtrl;
 	std::wstring getTimeToWString();
+	int saveFileDialog(CString& filePath);
+	afx_msg void OnEnChangeEditNumScore();
 };
 
 

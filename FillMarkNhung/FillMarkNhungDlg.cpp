@@ -13,6 +13,7 @@
 #endif
 #include "Algorithm.h"
 #include <string>
+#include "SuccessfulDlg.h"
 
 
 // CAboutDlg dialog used for App About
@@ -55,8 +56,8 @@ END_MESSAGE_MAP()
 
 CFillMarkNhungDlg::CFillMarkNhungDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FILLMARKNHUNG_DIALOG, pParent)
-	, numScore(0)
-	, className(_T(""))
+	, numScore(1)
+	, className(_T("6A3"))
 	, fileSavePath(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -66,10 +67,11 @@ void CFillMarkNhungDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_EDIT_NUM_SCORE, numScore);
-	DDV_MinMaxInt(pDX, numScore, 0, 10);
+	DDV_MinMaxInt(pDX, numScore, 1, 20);
 	DDX_Text(pDX, IDC_EDIT_NUM_CLASS, className);
 	DDX_Text(pDX, IDC_MFCEDITBROWSE, fileSavePath);
 	DDX_Control(pDX, IDC_MFCEDITBROWSE, editBrowserCtrl);
+	editBrowserCtrl.EnableFileBrowseButton(_T("XLSX"), _T("Excel Workbooks|*.xlsx||"));
 }
 
 BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
@@ -78,6 +80,7 @@ BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_GEN_SAMPLE, &CFillMarkNhungDlg::OnBnClickedButtonGenSample)
 	ON_BN_CLICKED(ID_BUTTON_NHAPDIEM, &CFillMarkNhungDlg::OnBnClickedButtonNhapdiem)
+	ON_EN_CHANGE(IDC_EDIT_NUM_SCORE, &CFillMarkNhungDlg::OnEnChangeEditNumScore)
 END_MESSAGE_MAP()
 
 
@@ -171,9 +174,12 @@ void CFillMarkNhungDlg::OnBnClickedButtonGenSample()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(TRUE);
+	TCHAR currentDir[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH, currentDir);
+	std::wstring temp2(currentDir);
 	std::wstring timeTemp = getTimeToWString();
 	std::wstring temp(className);
-	temp = timeTemp + temp + L".xlsx";
+	temp = temp2 + L"\\" + timeTemp + temp + L".xlsx";
 	createStudentListSample(temp.c_str(), numScore);
 	editBrowserCtrl.SetWindowTextW(temp.c_str());
 }
@@ -183,9 +189,25 @@ void CFillMarkNhungDlg::OnBnClickedButtonNhapdiem()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(TRUE);
-	CString filePath = L"2021-10-21_22-36-24_6A3.xlsx";
-	std::wstring temp(filePath);
-	importScore(temp.c_str(), numScore);
+	CString filePath;
+	editBrowserCtrl.GetWindowTextW(filePath);
+	CString fileOutput;
+	int check = saveFileDialog(fileOutput);
+	if (!check)
+	{
+		
+		if (!(importScore(filePath, fileOutput, numScore)))
+		{
+			SuccessfulDlg dlg;
+			dlg.DoModal();
+			::ShellExecute(NULL, L"open", fileOutput, NULL, NULL, SW_SHOW);
+		}
+			
+	}
+	else
+	{
+		//Error
+	}
 }
 
 std::wstring CFillMarkNhungDlg::getTimeToWString()
@@ -201,4 +223,32 @@ std::wstring CFillMarkNhungDlg::getTimeToWString()
 	std::string str(buffer);
 	std::wstring wsTmp(str.begin(), str.end());
 	return wsTmp;
+}
+
+int CFillMarkNhungDlg::saveFileDialog(CString& filePath)
+{
+	TCHAR currentDir[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH, currentDir);
+	LPCTSTR pszFilter = _T("Excel Workbooks |*.xlsx||");
+	CFileDialog dlgFile(FALSE, _T("xlsx"), className, OFN_OVERWRITEPROMPT, pszFilter, AfxGetMainWnd());
+	dlgFile.m_ofn.lpstrInitialDir = currentDir;
+	if (dlgFile.DoModal() == IDOK)
+	{
+		filePath = dlgFile.GetPathName();
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+void CFillMarkNhungDlg::OnEnChangeEditNumScore()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialogEx::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
 }

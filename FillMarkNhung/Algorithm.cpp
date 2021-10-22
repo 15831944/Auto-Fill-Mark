@@ -121,7 +121,7 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 	return 0;
 }
 
-int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListError, Sheet* sheet, int numScore)
+int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListError, Sheet* sheet, int numScore, libxl::Format* textFormat)
 {
 	if (sheet)
 	{
@@ -132,7 +132,7 @@ int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListEr
 				float val = studentList[i].scoreList[j];
 				if (val >=0)
 				{
-					sheet->writeNum(i+1, j+3, val);
+					sheet->writeNum(i+1, j+3, val, textFormat);
 				}
 			}
 		}
@@ -140,7 +140,7 @@ int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListEr
 	return 0;
 }
 
-int importScore(const TCHAR* filepath, int numScore)
+int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 {
 	std::vector<Student> studentList;
 	std::vector<std::vector<Score>> scoreList;
@@ -177,6 +177,11 @@ int importScore(const TCHAR* filepath, int numScore)
 				}
 			}
 		}
+		else
+		{
+			book->release();
+			return 1;
+		}
 
 		//Import score tabs
 		for (int i = 1; i < book->sheetCount(); ++i)
@@ -197,19 +202,39 @@ int importScore(const TCHAR* filepath, int numScore)
 					}
 				}
 			}
+			else
+			{
+				book->release();
+				return 1;
+			}
 			scoreList.push_back(scoreListTmp);
 		}
 
 	}
+	else
+	{
+		book->release();
+		return 1;
+	}
 
 	matchScore(studentList, scoreList, scoreListError);
-	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1);
 
-	if (book->save(filepath)) {
-		::ShellExecute(NULL, L"open", filepath, NULL, NULL, SW_SHOW);
+	libxl::Font* textFont = book->addFont();
+	textFont->setSize(13);
+	textFont->setName(L"Times New Roman");
+
+	libxl::Format* textFormat = book->addFormat();
+	textFormat->setFont(textFont);
+	textFormat->setAlignH(libxl::ALIGNH_RIGHT);
+
+	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1, textFormat);
+
+	if (book->save(fileOutPut)) {
+		//::ShellExecute(NULL, L"open", fileOutPut, NULL, NULL, SW_SHOW);
 	}
 	else {
-		std::cout << book->errorMessage() << std::endl;
+		book->release();
+		return 1;
 	}
 
 	book->release();

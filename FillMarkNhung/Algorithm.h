@@ -21,8 +21,9 @@ struct Score
 
 int createStudentListSample(const TCHAR* filepath, int numScore);
 
-int importScore(const TCHAR* filepath, int numScore);
+
+int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore);
 
 int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, std::vector<int>& scoreListError);
 
-int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListError, libxl::Sheet* sheet, int numScore);
+int exportScore(std::vector<Student>& studentList, std::vector<int>& scoreListError, Sheet* sheet, int numScore, libxl::Format* textFormat);
