@@ -59,6 +59,7 @@ CFillMarkNhungDlg::CFillMarkNhungDlg(CWnd* pParent /*=nullptr*/)
 	, numScore(1)
 	, className(_T("6A3"))
 	, fileSavePath(_T(""))
+	, m_threshold(90)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -72,6 +73,8 @@ void CFillMarkNhungDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_MFCEDITBROWSE, fileSavePath);
 	DDX_Control(pDX, IDC_MFCEDITBROWSE, editBrowserCtrl);
 	editBrowserCtrl.EnableFileBrowseButton(_T("XLSX"), _T("Excel Workbooks|*.xlsx||"));
+	DDX_Text(pDX, IDC_EDIT3, m_threshold);
+	DDV_MinMaxInt(pDX, m_threshold, 0, 100);
 }
 
 BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
@@ -81,6 +84,7 @@ BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_GEN_SAMPLE, &CFillMarkNhungDlg::OnBnClickedButtonGenSample)
 	ON_BN_CLICKED(ID_BUTTON_NHAPDIEM, &CFillMarkNhungDlg::OnBnClickedButtonNhapdiem)
 	ON_EN_CHANGE(IDC_EDIT_NUM_SCORE, &CFillMarkNhungDlg::OnEnChangeEditNumScore)
+	ON_EN_CHANGE(IDC_EDIT3, &CFillMarkNhungDlg::OnEnChangeEdit3)
 END_MESSAGE_MAP()
 
 
@@ -196,7 +200,7 @@ void CFillMarkNhungDlg::OnBnClickedButtonNhapdiem()
 	if (!check)
 	{
 		
-		if (!(importScore(filePath, fileOutput, numScore)))
+		if (!(importScore(filePath, fileOutput, numScore, m_threshold)))
 		{
 			SuccessfulDlg dlg;
 			dlg.DoModal();
@@ -231,7 +235,7 @@ int CFillMarkNhungDlg::saveFileDialog(CString& filePath)
 	GetCurrentDirectory(MAX_PATH, currentDir);
 	LPCTSTR pszFilter = _T("Excel Workbooks |*.xlsx||");
 	CFileDialog dlgFile(FALSE, _T("xlsx"), className, OFN_OVERWRITEPROMPT, pszFilter, AfxGetMainWnd());
-	dlgFile.m_ofn.lpstrInitialDir = currentDir;
+	//dlgFile.m_ofn.lpstrInitialDir = currentDir;
 	if (dlgFile.DoModal() == IDOK)
 	{
 		filePath = dlgFile.GetPathName();
@@ -244,6 +248,17 @@ int CFillMarkNhungDlg::saveFileDialog(CString& filePath)
 }
 
 void CFillMarkNhungDlg::OnEnChangeEditNumScore()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialogEx::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+}
+
+
+void CFillMarkNhungDlg::OnEnChangeEdit3()
 {
 	// TODO:  If this is a RICHEDIT control, the control will not
 	// send this notification unless you override the CDialogEx::OnInitDialog()

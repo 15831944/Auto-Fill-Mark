@@ -83,27 +83,42 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	return 0;
 }
 
-int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book)
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book, int thresh)
 {
-	double threshold = 0.85;
+	double threshold = thresh/100.0;
 
 	libxl::Font* textFont = book->addFont();
 	textFont->setSize(11);
 	textFont->setName(L"Calibri");
-	textFont->setBold(true);
+	textFont->setItalic(true);
 
 	libxl::Format* textFormat = book->addFormat();
 	textFormat->setFont(textFont);
 
+
+	libxl::Font* textFont2 = book->addFont();
+	textFont2->setSize(11);
+	textFont2->setName(L"Calibri");
+	textFont2->setBold(true);
+	textFont2->setUnderline(UNDERLINE_SINGLE);
+	libxl::Format* textFormat2 = book->addFormat();
+	textFormat2->setFont(textFont2);
+
+	libxl::Font* textFontError = book->addFont();
+	textFontError->setSize(11);
+	textFontError->setName(L"Calibri");
+	textFontError->setBold(true);
+	textFontError->setColor(COLOR_WHITE);
+
 	Format* formatError1 = book->addFormat();
 	formatError1->setFillPattern(FILLPATTERN_SOLID);
 	formatError1->setPatternForegroundColor(COLOR_RED);
-	formatError1->setFont(textFont);
+	formatError1->setFont(textFontError);
 
 	Format* formatError2 = book->addFormat();
 	formatError2->setFillPattern(FILLPATTERN_SOLID);
-	formatError2->setPatternForegroundColor(COLOR_BLUE);
-	formatError2->setFont(textFont);
+	formatError2->setPatternForegroundColor(COLOR_LIGHTORANGE);
+	formatError2->setFont(textFontError);
 
 
 	for (int i = 0; i < scoreList.size(); i++)
@@ -111,7 +126,7 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 		std::vector<Score> scoreListTmp = scoreList[i];
 		std::vector<int> scoreListErrorTmp;
 		Sheet* sheet = book->getSheet(i+1);
-
+		std::vector<int> studentListMatchID(studentList.size(), -1);
 		for (int j = 0; j < scoreListTmp.size(); j++)
 		{
 			std::wstring nickname = scoreListTmp[j].nickname;
@@ -128,11 +143,12 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 					scoreListTmp[j].matchID = studentList[k].id;
 				}
 			}
-			if (maxRatio > threshold)
+			if (maxRatio >= threshold)
 			{
 				if (studentList[maxK].scoreList[i] == -1)
 				{
 					studentList[maxK].scoreList[i] = scoreTemporary;
+					studentListMatchID[maxK] = j;
 				}
 				else if (studentList[maxK].scoreList[i] == -2)
 				{
@@ -142,20 +158,23 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 				{
 					studentList[maxK].scoreList[i] = -2;
 					scoreListErrorTmp.push_back(scoreListTmp[j].id);
-					sheet->writeStr(scoreListTmp[j].id, 2, L"DUPLICATE", formatError1);
+					std::wstring tmp = std::wstring(L"Trùng: ") + studentList[maxK].name;
+					sheet->writeStr(scoreListTmp[j].id, 2, tmp.c_str(), formatError1);
+					if (studentListMatchID[maxK] >= 0)
+						sheet->writeStr(scoreListTmp[studentListMatchID[maxK]].id, 2, tmp.c_str(), formatError1);
 				}
 			}
 			else
 			{
 				scoreListErrorTmp.push_back(scoreListTmp[j].id);
-				sheet->writeStr(scoreListTmp[j].id, 2, L"NOT FOUND", formatError2);
+				sheet->writeStr(scoreListTmp[j].id, 2, L"Không tìm thấy học sinh", formatError2);
 			}
-#ifdef _DEBUG
 			sheet->writeStr(scoreListTmp[j].id, 4, studentList[maxK].name.c_str(), textFormat);
-			sheet->writeNum(scoreListTmp[j].id, 5, maxRatio, textFormat);
-#endif
+			sheet->writeNum(scoreListTmp[j].id, 5, maxRatio * 100, textFormat);
 		}
-		//scoreListError.push_back(scoreListErrorTmp);
+		sheet->writeStr(0, 4, L"Tên học sinh match nhất", textFormat2);
+		sheet->writeStr(0, 5, L"% Match", textFormat2);
+		sheet->setCol(0, 5, -1);
 	}
 	return 0;
 }
@@ -183,7 +202,7 @@ int exportScore(std::vector<Student>& studentList, std::vector<std::vector<int>>
 	return 0;
 }
 
-int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
+int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, int threshold)
 {
 	std::vector<Student> studentList;
 	std::vector<std::vector<Score>> scoreList;
@@ -271,8 +290,23 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore)
 	formatError1->setFillPattern(FILLPATTERN_SOLID);
 	formatError1->setPatternForegroundColor(COLOR_RED);
 
-	matchScore(studentList, scoreList, book);
+	matchScore(studentList, scoreList, book, threshold);
 	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1, textFormat, formatError1);
+
+	libxl::Font* textFont2 = book->addFont();
+	textFont2->setSize(13);
+	textFont2->setName(L"Times New Roman");
+	textFont2->setBold(true);
+
+	libxl::Format* textFormat2 = book->addFormat();
+	textFormat2->setFont(textFont2);
+	textFormat2->setAlignH(libxl::ALIGNH_RIGHT);
+
+	for (int i = 1; i < book->sheetCount(); i++)
+	{
+		book->getSheet(0)->writeStr(0, i + 2, book->getSheet(i)->name(), textFormat2);
+	}
+	book->getSheet(0)->setCol(0, book->sheetCount() + 2, -1);
 
 	if (book->save(fileOutPut)) {
 		//::ShellExecute(NULL, L"open", fileOutPut, NULL, NULL, SW_SHOW);

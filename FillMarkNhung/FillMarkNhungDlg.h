@@ -41,6 +41,8 @@ public:
 	std::wstring getTimeToWString();
 	int saveFileDialog(CString& filePath);
 	afx_msg void OnEnChangeEditNumScore();
+	int m_threshold;
+	afx_msg void OnEnChangeEdit3();
 };
 
 

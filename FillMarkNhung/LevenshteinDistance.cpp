@@ -95,6 +95,12 @@ std::wstring RemoveVietnameseTone(const std::wstring& text) {
 	result = std::regex_replace(result, std::wregex(L"Ỳ|Ý|Ỵ|Ỷ|Ỹ|/g"), L"y");
 	result = std::regex_replace(result, std::wregex(L"đ"), L"d");
 	result = std::regex_replace(result, std::wregex(L"Đ"), L"D");
+	
+	//Remove non-Vietnamese alphabet character
+	result = std::regex_replace(result, std::wregex(L"w|j|z|f|W|J|Z|F"), L"");
+	//Remove class name
+	result = std::regex_replace(result, std::wregex(L"[0-9][a-zA-Z][0-9]"), L"");
+	result = std::regex_replace(result, std::wregex(L"[0-9][a-zA-Z]"), L""); //24Dao -> 2ao
 	//Remove space
 	result = std::regex_replace(result, std::wregex(L" "), L"");
 	return result;
@@ -128,6 +134,7 @@ double levenshteinRatio(std::wstring s1, std::wstring s2)
 	s21.erase(remove_if(s21.begin(), s21.end(), [](char c) { return !isalpha(c); } ), s21.end());
 
 	eraseAllSubStr(s21, "lop");
+	eraseAllSubStr(s11, "lop");
 	
 	//std::cout << s11 << std::endl;
 	//std::cout << s21 << std::endl;
