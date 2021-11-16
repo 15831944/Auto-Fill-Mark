@@ -4,7 +4,8 @@
 #include "libxl.h"
 
 using namespace libxl;
-
+#define COMMERCIAL
+#define VERSION L"v0.3.0"
 struct Student
 {
 	int id;
@@ -23,8 +24,8 @@ struct Score
 int createStudentListSample(const TCHAR* filepath, int numScore);
 
 
-int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, int threshold);
+int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int threshold, int & completedPercentage);
 
-int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book, int thresh);
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book, int thresh, int & percentagePos, int totalImported);
 
 int exportScore(std::vector<Student>& studentList, std::vector<std::vector<int>>& scoreListError, Sheet* sheet, int numScore, libxl::Format* textFormat, libxl::Format* formatError);

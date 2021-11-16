@@ -83,9 +83,11 @@ int createStudentListSample(const TCHAR* filepath, int numScore)
 	return 0;
 }
 
-int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book, int thresh)
+int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>>& scoreList, Book* book, int thresh, int & percentagePos, int totalImported)
 {
 	double threshold = thresh/100.0;
+	float ratioPercentage = 100.0 / totalImported;
+	int ratioIdx = 1;
 
 	libxl::Font* textFont = book->addFont();
 	textFont->setSize(11);
@@ -171,6 +173,9 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 			}
 			sheet->writeStr(scoreListTmp[j].id, 4, studentList[maxK].name.c_str(), textFormat);
 			sheet->writeNum(scoreListTmp[j].id, 5, maxRatio * 100, textFormat);
+
+			percentagePos = 10 + ratioIdx * ratioPercentage;
+			ratioIdx++;
 		}
 		sheet->writeStr(0, 4, L"Tên học sinh match nhất", textFormat2);
 		sheet->writeStr(0, 5, L"% Match", textFormat2);
@@ -190,11 +195,11 @@ int exportScore(std::vector<Student>& studentList, std::vector<std::vector<int>>
 				float val = studentList[i].scoreList[j];
 				if (val >=0)
 				{
-					sheet->writeNum(i+1, j+3, val, textFormat);
+					sheet->writeNum(studentList[i].id, j + 3, val, textFormat);
 				}
 				else if (val == -2)
 				{
-					sheet->writeBlank(i + 1, j + 3, formatError);
+					sheet->writeBlank(studentList[i].id, j + 3, formatError);
 				}
 			}
 		}
@@ -202,7 +207,7 @@ int exportScore(std::vector<Student>& studentList, std::vector<std::vector<int>>
 	return 0;
 }
 
-int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, int threshold)
+int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int threshold, int & completedPercentage)
 {
 	std::vector<Student> studentList;
 	std::vector<std::vector<Score>> scoreList;
@@ -210,6 +215,10 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 	std::vector<std::vector<int>> scoreListError;
 	libxl::Book* book = xlCreateXMLBook();
 	book->setKey(L"Halil Kural", L"windows-2723210a07c4e90162b26966a8jcdboe");//set cdkey
+
+	int totalImported = 0;
+	completedPercentage = 0;
+
 	if (book->load(filepath))
 	{
 		//Sheet DS_HOCSINH
@@ -224,7 +233,8 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 					std::wstring ws1(s1);
 					const wchar_t* s2 = sheet->readStr(row, 2);
 					std::wstring ws2(s2);
-					int id = sheet->readNum(row, 0);
+					//int id = sheet->readNum(row, 0);
+					int id = row;
 					ws1 = ws1 + L" " + ws2;
 					Student student;
 					student.id = row;
@@ -243,6 +253,8 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 			return 1;
 		}
 
+		completedPercentage = 5;
+
 		//Import score tabs
 		for (int i = 1; i < book->sheetCount(); ++i)
 		{
@@ -260,6 +272,8 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 						float scoreTemp = sheet->readNum(row, 1);
 						Score score = {row, nickname, scoreTemp};
 						scoreListTmp.push_back(score);
+
+						totalImported++;
 					}
 				}
 			}
@@ -270,6 +284,7 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 			}
 			scoreList.push_back(scoreListTmp);
 		}
+		completedPercentage = 10;
 
 	}
 	else
@@ -290,9 +305,9 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 	formatError1->setFillPattern(FILLPATTERN_SOLID);
 	formatError1->setPatternForegroundColor(COLOR_RED);
 
-	matchScore(studentList, scoreList, book, threshold);
+	matchScore(studentList, scoreList, book, threshold, completedPercentage, totalImported);
+	completedPercentage = 110;
 	exportScore(studentList, scoreListError, book->getSheet(0), book->sheetCount()-1, textFormat, formatError1);
-
 	libxl::Font* textFont2 = book->addFont();
 	textFont2->setSize(13);
 	textFont2->setName(L"Times New Roman");
@@ -317,6 +332,7 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int numScore, in
 	}
 
 	book->release();
+	completedPercentage = 115;
 	return 0;
 }
 

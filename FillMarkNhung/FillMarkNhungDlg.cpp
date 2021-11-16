@@ -1,4 +1,4 @@
-
+﻿
 // FillMarkNhungDlg.cpp : implementation file
 //
 
@@ -14,6 +14,7 @@
 #include "Algorithm.h"
 #include <string>
 #include "SuccessfulDlg.h"
+#include "TeacherDayDlg.h"
 
 
 // CAboutDlg dialog used for App About
@@ -75,6 +76,8 @@ void CFillMarkNhungDlg::DoDataExchange(CDataExchange* pDX)
 	editBrowserCtrl.EnableFileBrowseButton(_T("XLSX"), _T("Excel Workbooks|*.xlsx||"));
 	DDX_Text(pDX, IDC_EDIT3, m_threshold);
 	DDV_MinMaxInt(pDX, m_threshold, 0, 100);
+	DDX_Control(pDX, ID_BUTTON_NHAPDIEM, m_NhapDiemCtrl);
+	DDX_Control(pDX, IDC_BUTTON_GEN_SAMPLE, m_genSampleCtrl);
 }
 
 BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
@@ -85,6 +88,7 @@ BEGIN_MESSAGE_MAP(CFillMarkNhungDlg, CDialogEx)
 	ON_BN_CLICKED(ID_BUTTON_NHAPDIEM, &CFillMarkNhungDlg::OnBnClickedButtonNhapdiem)
 	ON_EN_CHANGE(IDC_EDIT_NUM_SCORE, &CFillMarkNhungDlg::OnEnChangeEditNumScore)
 	ON_EN_CHANGE(IDC_EDIT3, &CFillMarkNhungDlg::OnEnChangeEdit3)
+	ON_EN_CHANGE(IDC_MFCEDITBROWSE, &CFillMarkNhungDlg::OnEnChangeMfceditbrowse)
 END_MESSAGE_MAP()
 
 
@@ -120,7 +124,20 @@ BOOL CFillMarkNhungDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-
+#ifdef COMMERCIAL
+	std::wstring temp = std::wstring(L"Phần mềm nhập điểm cho Excel ") + std::wstring(VERSION);
+	SetWindowText(temp.c_str());
+#else
+	std::wstring temp = std::wstring(L"Phần mềm nhập điểm cho Nhung Nhung ♥ ") + std::wstring(VERSION);
+	SetWindowText(temp.c_str());
+	std::wstring datecheck = getDateToWString();
+	if (datecheck.compare(L"2021-11-20") == 0)
+	{
+		TeacherDayDlg teacherDayDlg;
+		teacherDayDlg.DoModal();
+	}
+#endif
+	m_NhapDiemCtrl.EnableWindow(FALSE);
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -200,11 +217,13 @@ void CFillMarkNhungDlg::OnBnClickedButtonNhapdiem()
 	if (!check)
 	{
 		
-		if (!(importScore(filePath, fileOutput, numScore, m_threshold)))
+		//if (!(importScore(filePath, fileOutput, m_threshold)))
 		{
-			SuccessfulDlg dlg;
-			dlg.DoModal();
-			::ShellExecute(NULL, L"open", fileOutput, NULL, NULL, SW_SHOW);
+			SuccessfulDlg dlg (m_threshold, filePath, fileOutput);
+			if (dlg.DoModal() == IDOK)
+			{
+				::ShellExecute(NULL, L"open", fileOutput, NULL, NULL, SW_SHOW);
+			}
 		}
 			
 	}
@@ -224,6 +243,21 @@ std::wstring CFillMarkNhungDlg::getTimeToWString()
 	localtime_s(&timeinfo, &rawtime);
 
 	strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S_", &timeinfo);
+	std::string str(buffer);
+	std::wstring wsTmp(str.begin(), str.end());
+	return wsTmp;
+}
+
+std::wstring CFillMarkNhungDlg::getDateToWString()
+{
+	time_t rawtime;
+	struct tm timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	localtime_s(&timeinfo, &rawtime);
+
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d", &timeinfo);
 	std::string str(buffer);
 	std::wstring wsTmp(str.begin(), str.end());
 	return wsTmp;
@@ -266,4 +300,26 @@ void CFillMarkNhungDlg::OnEnChangeEdit3()
 	// with the ENM_CHANGE flag ORed into the mask.
 
 	// TODO:  Add your control notification handler code here
+}
+
+
+void CFillMarkNhungDlg::OnEnChangeMfceditbrowse()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialogEx::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+	UpdateData(TRUE);
+	CString filePath;
+	editBrowserCtrl.GetWindowTextW(filePath);
+	if (!filePath.IsEmpty())
+	{
+		m_NhapDiemCtrl.EnableWindow(TRUE);
+	}
+	else
+	{
+		m_NhapDiemCtrl.EnableWindow(FALSE);
+	}
 }

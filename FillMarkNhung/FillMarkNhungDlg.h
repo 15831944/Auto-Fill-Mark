@@ -39,10 +39,14 @@ public:
 	afx_msg void OnBnClickedButtonNhapdiem();
 	CMFCEditBrowseCtrl editBrowserCtrl;
 	std::wstring getTimeToWString();
+	std::wstring getDateToWString();
 	int saveFileDialog(CString& filePath);
 	afx_msg void OnEnChangeEditNumScore();
 	int m_threshold;
 	afx_msg void OnEnChangeEdit3();
+	afx_msg void OnEnChangeMfceditbrowse();
+	CButton m_NhapDiemCtrl;
+	CButton m_genSampleCtrl;
 };
 
 
