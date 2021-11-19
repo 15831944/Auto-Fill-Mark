@@ -4,8 +4,12 @@
 #include "libxl.h"
 
 using namespace libxl;
+
+#ifndef _WIN64
 #define COMMERCIAL
-#define VERSION L"v0.3.0"
+#endif // _WIN32
+
+#define VERSION L"v0.3.1"
 struct Student
 {
 	int id;

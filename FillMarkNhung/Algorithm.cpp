@@ -145,7 +145,7 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 					scoreListTmp[j].matchID = studentList[k].id;
 				}
 			}
-			if (maxRatio >= threshold)
+			if (maxRatio >= threshold && maxK >= 0)
 			{
 				if (studentList[maxK].scoreList[i] == -1)
 				{
@@ -171,8 +171,11 @@ int matchScore(std::vector<Student>& studentList, std::vector<std::vector<Score>
 				scoreListErrorTmp.push_back(scoreListTmp[j].id);
 				sheet->writeStr(scoreListTmp[j].id, 2, L"Không tìm thấy học sinh", formatError2);
 			}
-			sheet->writeStr(scoreListTmp[j].id, 4, studentList[maxK].name.c_str(), textFormat);
-			sheet->writeNum(scoreListTmp[j].id, 5, maxRatio * 100, textFormat);
+			if (maxK >= 0)
+			{
+				sheet->writeStr(scoreListTmp[j].id, 4, studentList[maxK].name.c_str(), textFormat);
+				sheet->writeNum(scoreListTmp[j].id, 5, maxRatio * 100, textFormat);
+			}
 
 			percentagePos = 10 + ratioIdx * ratioPercentage;
 			ratioIdx++;
@@ -227,11 +230,19 @@ int importScore(const TCHAR* filepath, const TCHAR* fileOutPut, int threshold, i
 		{
 			for (int row = 1; row < sheet->lastRow(); ++row)
 			{
-				if (sheet->cellType(row, 1) == CELLTYPE_STRING && sheet->cellType(row, 2) == CELLTYPE_STRING && sheet->cellType(row, 0) == CELLTYPE_NUMBER)
+				if (sheet->cellType(row, 1) == CELLTYPE_STRING && sheet->cellType(row, 0) == CELLTYPE_NUMBER)
 				{
 					const wchar_t* s1 = sheet->readStr(row, 1);
 					std::wstring ws1(s1);
-					const wchar_t* s2 = sheet->readStr(row, 2);
+					const wchar_t* s2;
+					if (sheet->cellType(row, 2) == CELLTYPE_STRING)
+					{
+						s2 = sheet->readStr(row, 2);
+					}
+					else
+					{
+						s2 = L" "; //dummy value for not null
+					}
 					std::wstring ws2(s2);
 					//int id = sheet->readNum(row, 0);
 					int id = row;
